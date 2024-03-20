@@ -8,7 +8,6 @@ fi
 
 geth \
     --verbosity=3 \
-    --networkid=$NETWORK_ID \
     --datadir=/db \
     --rollup.disabletxpoolgossip=false \
     --rollup.sequencerhttp=$SEQUENCER_HTTP \
@@ -22,5 +21,4 @@ geth \
     --authrpc.port=8551 \
     --authrpc.jwtsecret=/jwt.txt \
     --bootnodes=$BOOTNODES \
-    --nodiscover \
     --metrics
