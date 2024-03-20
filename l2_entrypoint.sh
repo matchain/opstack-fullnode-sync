@@ -22,4 +22,5 @@ geth \
     --authrpc.port=8551 \
     --authrpc.jwtsecret=/jwt.txt \
     --bootnodes=$BOOTNODES \
+    --nodiscover \
     --metrics
