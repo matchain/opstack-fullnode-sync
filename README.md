@@ -3,17 +3,12 @@
 A simple docker compose script for launching full node for OP Stack chains.
 
 ## Recommended Hardware
+- 4 Core
+- 16 GB+ RAM
+- 1TB SSD (NVME Recommended)
+- 100 MB/s+ Download
 
-- 16GB+ RAM
-- 2TB SSD (NVME Recommended)
-- 100mb/s+ Download
-
-## Installation and Configuration
-
-### Install docker and docker compose
-
-Please follow offcial instruction here: https://docs.docker.com/engine/install/
-
+## Prepare
 
 ### Generate JWT file
 
@@ -21,36 +16,20 @@ Please follow offcial instruction here: https://docs.docker.com/engine/install/
 openssl rand -hex 32 > jwt.txt
 ```
 
-### Copy node.env.example to node.env
+### Copy .env.example to .env and update the value
 
-Make a copy of `node.env.example` named `node.env`.
-
-```sh
-cp node.env.example node.env
-```
-
-
-### Copy geth.env.example to geth.env
-
-Make a copy of `geth.env.example` named `geth.env`.
+Make a copy of `.env.example` named `.env`.
 
 ```sh
-cp geth.env.example geth.env
+cp .env.example .env
 ```
-
-Open `node.env` and `geth.env` with your editor of choice, and update:
-
-1. SEQUENCER_HTTP
-2. BOOTNODES
-3. L1_RPC
-4. P2P_ADDR
 
 ## Operating the Node
 
 ### Start
 
 ```sh
-docker compose up -d
+docker compose --env-file .env up -d
 ```
 
 ### View logs
@@ -58,13 +37,13 @@ docker compose up -d
 logs for op node
 
 ```sh
-docker compose logs -f op-node
+docker compose logs -f node
 ```
 
 logs for op geth
 
 ```sh
-docker compose logs -f op-geth
+docker compose logs -f geth
 ```
 
 ### Sanity Test

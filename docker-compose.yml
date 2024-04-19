@@ -1,5 +1,3 @@
-version: "3.8"
-
 volumes:
   geth:
   node:
@@ -18,26 +16,51 @@ services:
       - "6060:6060"
       # geth p2p port
       - "30303:30303"
-
     volumes:
-      - "geth_data:/data"
+      - "geth:/data"
       - "./jwt.txt:/jwt.txt"
-      - "./geth_entrypoint.sh:/geth_entrypoint.sh"
-    entrypoint:
-      - "/bin/sh"
-      - "-c"
-      - "/geth_entrypoint.sh"
-    env_file:
-      - ./geth.env
+    environment:
+      - SEQUENCER_HTTP=${SEQUENCER_HTTP}
+      - BOOTNODES=${BOOTNODES}
+      - GENESIS_URL=${GENESIS_URL}
+      - SYNC_MODE=${SYNC_MODE:-full}
+      - GC_MODE=${SYNC_MODE:-archive}
+    entrypoint: [ "/bin/sh", "-c" ]
+    command:
+      - |
+        # do geth init if datadir is empty
+        if [ ! -d "/data/geth" ]; then
+            echo "Initializing geth datadir"
+            wget -O /data/genesis.json $GENESIS_URL
+            geth init --datadir=/data /data/genesis.json
+        else
+            echo "geth datadir already initialized, skipping..."
+        fi
+        geth \
+            --datadir=/data \
+            --rollup.disabletxpoolgossip=true \
+            --rollup.sequencerhttp=$SEQUENCER_HTTP \
+            --http \
+            --http.corsdomain="*" \
+            --http.vhosts="*" \
+            --http.addr=0.0.0.0 \
+            --http.api=web3,debug,eth,txpool,net,engine \
+            --ws \
+            --ws.addr=0.0.0.0 \
+            --ws.api=web3,debug,eth,txpool,net,engine \
+            --authrpc.addr=0.0.0.0 \
+            --authrpc.vhosts="*" \
+            --authrpc.port=8551 \
+            --authrpc.jwtsecret=/jwt.txt \
+            --bootnodes=$BOOTNODES \
+            --metrics \
+            --syncmode=$SYNC_MODE \
+            --gcmode=$GC_MODE
 
-  op-node:
+  node:
     depends_on:
       - geth
-    image: public.ecr.aws/altlayer/optimism-node:v1.7.3
-    entrypoint: 
-      - "/bin/sh"
-      - "-c"
-      - "/node_entrypoint.sh"
+    image: us-docker.pkg.dev/oplabs-tools-artifacts/images/op-node:v1.7.3
     ports:
       # node rpc
       - "9545:9545"
@@ -48,6 +71,47 @@ services:
     volumes:
       - "node:/data"
       - "./jwt.txt:/jwt.txt"
-      - "./node_entrypoint.sh:/node_entrypoint.sh"
-    env_file:
-      - ./node.env
+    environment:
+      - L1_RPC=${L1_RPC}
+      - L1_RPC_KIND=${L1_RPC_KIND:-standard}
+      - P2P_STATIC=${P2P_STATIC}
+      - ROLLUP_CONFIG_URL=${ROLLUP_CONFIG_URL}
+      - PLASMA_DA_SERVER=${ROLLUP_CONFIG_URL}
+    entrypoint: [ "/bin/sh", "-c" ]
+    command:
+      - |
+        until nc -z -w 5 geth 8551; do
+            echo "Waiting for geth ..."
+            sleep 5
+        done
+        echo "geth is up"
+
+        if [ ! -f "/data/rollup.json" ]; then
+            wget -O /data/rollup.json $ROLLUP_CONFIG_URL
+        fi
+
+        mkdir -p /data/opnode_discovery_db
+        mkdir -p /data/opnode_peerstore_db
+        mkdir -p /data/safedb
+
+        op-node \
+            --syncmode=execution-layer \
+            --rollup.config=/data/rollup.json \
+            --safedb.path=/data/safedb \
+            --l1=$L1_RPC \
+            --l1.rpckind=$L1_RPC_KIND \
+            --l1.trustrpc \
+            --l1.beacon.ignore \
+            --l2=http://geth:8551 \
+            --l2.jwt-secret=/jwt.txt \
+            --metrics.enabled \
+            --p2p.listen.ip=0.0.0.0 \
+            --p2p.listen.tcp=9003 \
+            --p2p.listen.udp=9003 \
+            --p2p.discovery.path=/data/opnode_discovery_db \
+            --p2p.peerstore.path=/data/opnode_peerstore_db \
+            --p2p.priv.path=/data/opnode_p2p_priv.txt \
+            --p2p.static=$P2P_STATIC \
+            --plasma.enabled \
+            --plasma.verify-on-read \
+            --plasma.da-server=$PLASMA_DA_SERVER
