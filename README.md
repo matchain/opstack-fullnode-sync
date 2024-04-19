@@ -14,16 +14,6 @@ A simple docker compose script for launching full node for OP Stack chains.
 
 Please follow offcial instruction here: https://docs.docker.com/engine/install/
 
-### Clone the Repository
-
-```sh
-git clone https://github.com/alt-research/opstack-fullnode-sync
-cd opstack-fullnode-sync
-```
-
-### Prepare genesis.json and rollup.json
-
-TODO
 
 ### Generate JWT file
 
@@ -40,15 +30,15 @@ cp node.env.example node.env
 ```
 
 
-### Copy l2.env.example to l2.env
+### Copy geth.env.example to geth.env
 
-Make a copy of `l2.env.example` named `l2.env`.
+Make a copy of `geth.env.example` named `geth.env`.
 
 ```sh
-cp l2.env.example l2.env
+cp geth.env.example geth.env
 ```
 
-Open `node.env` and `l2.env` with your editor of choice, and update:
+Open `node.env` and `geth.env` with your editor of choice, and update:
 
 1. SEQUENCER_HTTP
 2. BOOTNODES
@@ -65,16 +55,16 @@ docker compose up -d
 
 ### View logs
 
-logs for op-node
+logs for op node
 
 ```sh
 docker compose logs -f op-node
 ```
 
-logs for op-l2 geth node
+logs for op geth
 
 ```sh
-docker compose logs -f l2
+docker compose logs -f op-geth
 ```
 
 ### Sanity Test
@@ -153,18 +143,5 @@ should return something like:
 docker compose down
 ```
 
-### Clear storage
-
-```sh
-docker volume ls
-# you will see
-local     opstack-fullnode-sync_l2_data
-local     opstack-fullnode-sync_node
-
-# delete the volume
-docker volume rm opstack-fullnode-sync_l2_data
-docker volume rm opstack-fullnode-sync_node
-```
-
-Will shut down the node without wiping any volumes.
-You can safely run this command and then restart the node again.
+### Reference
+- https://docs.optimism.io/builders/node-operators/tutorials/node-from-docker

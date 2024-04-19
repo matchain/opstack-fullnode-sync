@@ -1,57 +1,53 @@
-version: "3.4"
+version: "3.8"
 
 volumes:
-  l2_data:
+  geth:
   node:
 
 services:
-  l2:
-    image: us-docker.pkg.dev/oplabs-tools-artifacts/images/op-geth:0402d543c3d0cff3a3d344c0f4f83809edb44f10
+  geth:
+    image: us-docker.pkg.dev/oplabs-tools-artifacts/images/op-geth:v1.101311.0
     ports:
-      # l2 http rpc
+      # geth http rpc
       - "8545:8545"
-      # l2 ws rpc
+      # geth ws rpc
       - "8546:8546"
-      # l2 authrpc
+      # geth eignine authrpc
       - "8551:8551"
-      # metrics
+      # geth metrics
       - "6060:6060"
-      # discovery.port
+      # geth p2p port
       - "30303:30303"
 
     volumes:
-      - "l2_data:/db"
-      - "./genesis.json:/genesis.json"
+      - "geth_data:/data"
       - "./jwt.txt:/jwt.txt"
-      - "./l2_entrypoint.sh:/l2_entrypoint.sh"
-    entrypoint: # pass the L2 specific flags by overriding the entry-point and adding extra arguments
+      - "./geth_entrypoint.sh:/geth_entrypoint.sh"
+    entrypoint:
       - "/bin/sh"
-      - "/l2_entrypoint.sh"
+      - "-c"
+      - "/geth_entrypoint.sh"
     env_file:
-      - ./l2.env
+      - ./geth.env
 
   op-node:
     depends_on:
-      - l2
-    image: public.ecr.aws/altlayer/optimism-node:v1.7.0-da
-    entrypoint: # pass the L2 specific flags by overriding the entry-point and adding extra arguments
+      - geth
+    image: public.ecr.aws/altlayer/optimism-node:v1.7.3
+    entrypoint: 
       - "/bin/sh"
+      - "-c"
       - "/node_entrypoint.sh"
     ports:
-      # op-node rpc
+      # node rpc
       - "9545:9545"
-      # p2p tcp/udp
-      - "9222:9222"
-      # metrics
+      # node p2p 
+      - "9003:9003"
+      # node metrics
       - "7300:7300"
-      # pprof
-      # - "6060:6060"
-      # conductor.rpc 
-      - "8547:8547"
     volumes:
-      - "node:/data/node"
+      - "node:/data"
       - "./jwt.txt:/jwt.txt"
-      - "./rollup.json:/rollup.json"
       - "./node_entrypoint.sh:/node_entrypoint.sh"
     env_file:
       - ./node.env

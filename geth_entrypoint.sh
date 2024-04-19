@@ -1,17 +1,19 @@
 # do geth init if datadir is empty
-if [ -z "$(ls -A /db)" ]; then
+if [ ! -d "/data/geth" ]; then
     echo "Initializing geth datadir"
-    geth init --datadir=/db /genesis.json
+    wget -O /data/genesis.json $GENESIS_URL
+    geth init --datadir=/data /data/genesis.json
 else
-    echo "geth datadir is not empty, skipping initialization"
+    echo "geth datadir already initialized, skipping..."
 fi
 
 geth \
-    --verbosity=3 \
-    --datadir=/db \
-    --rollup.disabletxpoolgossip=false \
+    --datadir=/data \
+    --rollup.disabletxpoolgossip=true \
     --rollup.sequencerhttp=$SEQUENCER_HTTP \
     --http \
+    --http.corsdomain="*" \
+    --http.vhosts="*" \
     --http.addr=0.0.0.0 \
     --http.api=web3,debug,eth,txpool,net,engine \
     --ws \
@@ -21,4 +23,6 @@ geth \
     --authrpc.port=8551 \
     --authrpc.jwtsecret=/jwt.txt \
     --bootnodes=$BOOTNODES \
-    --metrics
+    --metrics \
+    --syncmode=$SYNC_MODE \
+    --gcmode=$GC_MODE
