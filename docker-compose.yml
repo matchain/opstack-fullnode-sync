@@ -54,6 +54,8 @@ services:
             --authrpc.jwtsecret=/jwt.txt \
             --bootnodes=$BOOTNODES \
             --metrics \
+            --metrics.port=6060 \
+            --metrics.addr="0.0.0.0" \
             --syncmode=$SYNC_MODE \
             --gcmode=$GC_MODE
 
@@ -101,6 +103,10 @@ services:
             --l2=http://geth:8551 \
             --l2.jwt-secret=/jwt.txt \
             --metrics.enabled \
+            --metrics.port=7300 \
+            --metrics.addr="0.0.0.0" \
+            --rpc.addr=0.0.0.0 \
+            --rpc.port=9545 \
             --p2p.listen.ip=0.0.0.0 \
             --p2p.listen.tcp=9003 \
             --p2p.listen.udp=9003 \
